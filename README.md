@@ -1,1 +1,1 @@
-# tradex
+TradeX Lite
