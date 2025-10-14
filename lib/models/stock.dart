@@ -8,6 +8,7 @@ class Stock {
   int volume;
   double marketCap;
   List<double> intraday;
+  bool isInWatchlist;
 
   Stock({
     required this.symbol,
@@ -19,6 +20,7 @@ class Stock {
     required this.volume,
     required this.marketCap,
     required this.intraday,
+    this.isInWatchlist = false,
   });
 
   double get changePercent {

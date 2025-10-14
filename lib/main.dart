@@ -5,8 +5,10 @@ import 'screens/home_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Hive.initFlutter();
-  await Hive.openBox('authBox');
+  await Future.wait([Hive.openBox('authBox'), Hive.openBox('watchlistBox')]);
+
   runApp(const TradeXLiteApp());
 }
 
@@ -40,23 +42,19 @@ class _TradeXLiteAppState extends State<TradeXLiteApp> {
 
     setState(() {
       _themeMode = savedTheme == 'dark' ? ThemeMode.dark : ThemeMode.light;
-      _refreshInterval = Duration(seconds: savedInterval??5);
+      _refreshInterval = Duration(seconds: savedInterval ?? 5);
       _currency = savedCurrency;
       _isLoggedIn = false;
       _initialized = true;
     });
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
       return const MaterialApp(
         home: Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(color: Colors.blueAccent),
-          ),
+          body: Center(child: CircularProgressIndicator(color: Colors.blueAccent)),
         ),
       );
     }
@@ -69,21 +67,20 @@ class _TradeXLiteAppState extends State<TradeXLiteApp> {
       themeMode: _themeMode,
       home: _isLoggedIn
           ? HomeScreen(
-        themeModeSetter: (m) => setState(() => _themeMode = m),
-        currentThemeMode: _themeMode,
-        refreshIntervalSetter: (d) =>
-            setState(() => _refreshInterval = d),
-        currentRefreshInterval: _refreshInterval,
-        currencySetter: (c) => setState(() => _currency = c),
-        currentCurrency: _currency,
-      )
+              themeModeSetter: (m) => setState(() => _themeMode = m),
+              currentThemeMode: _themeMode,
+              refreshIntervalSetter: (d) => setState(() => _refreshInterval = d),
+              currentRefreshInterval: _refreshInterval,
+              currencySetter: (c) => setState(() => _currency = c),
+              currentCurrency: _currency,
+            )
           : LoginScreen(
-        onLoginSuccess: () {
-          final box = Hive.box('authBox');
-          box.put('isLoggedIn', true);
-          setState(() => _isLoggedIn = true);
-        },
-      ),
+              onLoginSuccess: () {
+                final box = Hive.box('authBox');
+                box.put('isLoggedIn', true);
+                setState(() => _isLoggedIn = true);
+              },
+            ),
     );
   }
 }
