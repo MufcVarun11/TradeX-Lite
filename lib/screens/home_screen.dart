@@ -37,6 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Duration _refreshInterval = const Duration(seconds: 5);
   Timer? _timer;
   int _currentIndex = 0;
+  bool _isLoadingMore = false;
+  int _loadedCount = 30;
 
   final watchlistBox = Hive.box('watchlistBox');
 
@@ -60,6 +62,21 @@ class _HomeScreenState extends State<HomeScreen> {
   void _updateWatchlist() {
     setState(() {
       _watchlist = _stocks.where((s) => s.isInWatchlist).toList();
+    });
+  }
+
+  Future<void> _loadMoreStocks() async {
+    if (_isLoadingMore || _filtered.length >= _stocks.length) return;
+
+    setState(() => _isLoadingMore = true);
+
+    await Future.delayed(const Duration(seconds: 1)); // simulate network delay
+
+    setState(() {
+      final nextBatch = _stocks.skip(_loadedCount).take(20).toList();
+      _filtered.addAll(nextBatch);
+      _loadedCount += nextBatch.length;
+      _isLoadingMore = false;
     });
   }
 
@@ -125,7 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         title: const Text('Market Watch', style: TextStyle(fontWeight: FontWeight.bold)),
-        actions: [IconButton(icon: const Icon(Icons.settings), onPressed: _openSettings)],
       ),
       AppBar(
         backgroundColor: Colors.transparent,
@@ -138,6 +154,108 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: bgColor,
       appBar: appBars[_currentIndex],
+      drawer: Drawer(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 🔹 Drawer Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: isDark
+                        ? [Colors.blueAccent.shade700, Colors.blueGrey.shade800]
+                        : [Colors.blueAccent, Colors.lightBlueAccent.shade100],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    CircleAvatar(
+                      radius: 32,
+                      backgroundColor: Colors.white,
+                      child: Icon(Icons.person, size: 36, color: Colors.blueAccent),
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'Welcome, Trader!',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Manage your app preferences',
+                      style: TextStyle(fontSize: 13, color: Colors.white70),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // 🔹 Settings Option
+              ListTile(
+                leading: const Icon(Icons.settings_outlined, color: Colors.blueAccent),
+                title: const Text(
+                  'Settings',
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _openSettings();
+                },
+              ),
+
+              // 🔹 Divider
+              Divider(
+                thickness: 1,
+                indent: 16,
+                endIndent: 16,
+                color: isDark ? Colors.grey[800] : Colors.grey[300],
+              ),
+
+              // 🔹 Logout Option
+              ListTile(
+                leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                title: const Text(
+                  'Logout',
+                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
+                ),
+                onTap: () async {
+                  Navigator.pop(context);
+                  final box = Hive.box('authBox');
+                  await box.put('isLoggedIn', false);
+                  if (!mounted) return;
+                  Navigator.of(context).pushReplacementNamed('/');
+                },
+              ),
+
+              const Spacer(),
+
+              // 🔹 App Version / Footer
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  'TradeX Lite v1.0.0',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white54 : Colors.grey.shade600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+
       body: screens[_currentIndex],
       bottomNavigationBar: Container(
         margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
@@ -146,7 +264,9 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: isDark ? Colors.black.withOpacity(0.4) : Colors.blueAccent.withOpacity(0.15),
+              color: isDark
+                  ? Colors.black.withOpacity(0.4)
+                  : Colors.blueAccent.withOpacity(0.15),
               blurRadius: 25,
               offset: const Offset(0, 10),
             ),
@@ -164,10 +284,21 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+
   }
 
   Widget _buildMarketScreen() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ScrollController _scrollController = ScrollController();
+    final int batchSize = 20; // how many new stocks to load per scroll
+
+    // Add scroll listener for lazy loading
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+          _scrollController.position.maxScrollExtent - 200) {
+        _loadMoreStocks();
+      }
+    });
 
     return Column(
       children: [
@@ -177,7 +308,13 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               color: isDark ? Colors.grey[850] : Colors.white,
               borderRadius: BorderRadius.circular(30),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 3))],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 5,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: TextField(
               onChanged: _filterList,
@@ -185,76 +322,162 @@ class _HomeScreenState extends State<HomeScreen> {
                 hintText: 'Search stocks (e.g. RELIANCE, TCS, HDFCBANK)',
                 prefixIcon: const Icon(Icons.search),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                contentPadding:
+                const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               ),
             ),
           ),
         ),
         Expanded(
-          child: _filtered.isEmpty
-              ? const Center(child: Text('No stocks found', style: TextStyle(fontSize: 16, color: Colors.grey)))
-              : ListView.separated(
-            itemCount: _filtered.length,
-            separatorBuilder: (_, __) => Divider(color: isDark ? Colors.grey[800] : Colors.grey[300], height: 1),
-            itemBuilder: (context, index) {
-              final s = _filtered[index];
-              final change = s.changePercent;
-              final isUp = change >= 0;
+          child: NotificationListener<ScrollEndNotification>(
+            onNotification: (_) {
+              if (_scrollController.position.extentAfter < 300) {
+                _loadMoreStocks();
+              }
+              return false;
+            },
+            child: _filtered.isEmpty
+                ? const Center(
+              child: Text(
+                'No stocks found',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            )
+                : ListView.separated(
+              controller: _scrollController,
+              itemCount: _filtered.length + 1,
+              separatorBuilder: (_, __) => Divider(
+                color: isDark ? Colors.grey[800] : Colors.grey[300],
+                height: 1,
+              ),
+              itemBuilder: (context, index) {
+                // Lazy loading loader indicator
+                if (index == _filtered.length) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Center(
+                      child: _isLoadingMore
+                          ? const CircularProgressIndicator(
+                          color: Colors.blueAccent)
+                          : const SizedBox.shrink(),
+                    ),
+                  );
+                }
 
-              return InkWell(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => StockDetailScreen(stock: s, currency: widget.currentCurrency)),
-                ),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                  color: isUp ? Colors.green.withOpacity(0.04) : Colors.red.withOpacity(0.04),
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: isUp ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
-                        child: Text(s.symbol.substring(0, 2), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                final s = _filtered[index];
+                final change = s.changePercent;
+                final isUp = change >= 0;
+
+                return InkWell(
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => StockDetailScreen(
+                        stock: s,
+                        currency: widget.currentCurrency,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(s.symbol, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                            const SizedBox(height: 4),
-                            Text(s.name, overflow: TextOverflow.ellipsis, style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-                          ],
+                    ),
+                  ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    color: isUp
+                        ? Colors.green.withOpacity(0.04)
+                        : Colors.red.withOpacity(0.04),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 16),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: isUp
+                              ? Colors.green.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
+                          child: Text(
+                            s.symbol.substring(0, 2),
+                            style: const TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
                         ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(_formatPrice(s.price), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                          const SizedBox(height: 3),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(isUp ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: isUp ? Colors.green : Colors.red, size: 20),
-                              Text('${change.toStringAsFixed(2)}%', style: TextStyle(color: isUp ? Colors.green : Colors.red, fontWeight: FontWeight.w600, fontSize: 13)),
+                              Text(
+                                s.symbol,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                s.name,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 13),
+                              ),
                             ],
                           ),
-                        ],
-                      ),
-                      IconButton(
-                        icon: Icon(s.isInWatchlist ? Icons.star_rounded : Icons.star_border_rounded, color: s.isInWatchlist ? Colors.amber : Colors.grey),
-                        onPressed: () => _toggleWatchlist(s),
-                      ),
-                    ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              _formatPrice(s.price),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16),
+                            ),
+                            const SizedBox(height: 3),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isUp
+                                      ? Icons.arrow_drop_up
+                                      : Icons.arrow_drop_down,
+                                  color: isUp ? Colors.green : Colors.red,
+                                  size: 20,
+                                ),
+                                Text(
+                                  '${change.toStringAsFixed(2)}%',
+                                  style: TextStyle(
+                                      color: isUp
+                                          ? Colors.green
+                                          : Colors.red,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 250),
+                          transitionBuilder: (child, anim) =>
+                              ScaleTransition(scale: anim, child: child),
+                          child: IconButton(
+                            key: ValueKey(s.isInWatchlist),
+                            icon: Icon(
+                              s.isInWatchlist ? Icons.bookmark : Icons.bookmark_border,
+                              color: s.isInWatchlist ? Colors.blueAccent : Colors.grey,
+                            ),
+                            onPressed: () => _toggleWatchlist(s),
+                          ),
+                        ),
+
+                      ],
+                    ),
                   ),
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
         ),
       ],
     );
   }
+
 
   Widget _buildWatchlistScreen() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -263,21 +486,36 @@ class _HomeScreenState extends State<HomeScreen> {
       return const Center(
         child: Text(
           'No stocks added to watchlist yet.',
-          style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500),
+          style: TextStyle(
+            fontSize: 16,
+            color: Colors.grey,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       );
     }
 
-    return ListView.builder(
+    return ReorderableListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       itemCount: _watchlist.length,
+      onReorder: (oldIndex, newIndex) {
+        setState(() {
+          if (newIndex > oldIndex) newIndex -= 1;
+          final movedItem = _watchlist.removeAt(oldIndex);
+          _watchlist.insert(newIndex, movedItem);
+
+          final symbols = _watchlist.map((s) => s.symbol).toList();
+          Hive.box('watchlistBox').put('symbols', symbols);
+        });
+      },
       itemBuilder: (context, index) {
         final s = _watchlist[index];
         final change = s.changePercent;
         final isUp = change >= 0;
 
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 500),
+          key: ValueKey(s.symbol),
+          duration: const Duration(milliseconds: 300),
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
@@ -285,67 +523,149 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
-                color: isDark ? Colors.black.withOpacity(0.3) : Colors.blueAccent.withOpacity(0.08),
+                color: isDark
+                    ? Colors.black.withOpacity(0.3)
+                    : Colors.blueAccent.withOpacity(0.08),
                 blurRadius: 12,
                 offset: const Offset(0, 6),
               ),
             ],
             border: Border.all(
-              color: isUp ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
+              color: isUp
+                  ? Colors.green.withOpacity(0.25)
+                  : Colors.red.withOpacity(0.25),
               width: 1,
             ),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(18),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => StockDetailScreen(stock: s, currency: widget.currentCurrency)),
+              MaterialPageRoute(
+                builder: (_) => StockDetailScreen(
+                  stock: s,
+                  currency: widget.currentCurrency,
+                ),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 22,
-                      backgroundColor: isUp ? Colors.green.withOpacity(0.15) : Colors.red.withOpacity(0.15),
-                      child: Text(s.symbol.substring(0, 2), style: TextStyle(color: isUp ? Colors.green : Colors.redAccent, fontWeight: FontWeight.bold)),
-                    ),
-                    const SizedBox(width: 14),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(s.symbol, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 4),
-                        Text(s.name, style: TextStyle(fontSize: 13, color: Colors.grey.shade600), overflow: TextOverflow.ellipsis),
-                      ],
-                    ),
-                  ],
+                /// 🔹 LEFT SECTION (Logo + Stock Name)
+                Expanded(
+                  flex: 3,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      CircleAvatar(
+                        radius: 22,
+                        backgroundColor: isUp
+                            ? Colors.green.withOpacity(0.12)
+                            : Colors.red.withOpacity(0.12),
+                        child: Text(
+                          s.symbol.substring(0, 2),
+                          style: TextStyle(
+                            color: isUp ? Colors.green : Colors.redAccent,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              s.symbol,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              s.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(_formatPrice(s.price), style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: isUp ? Colors.green : Colors.red)),
-                    const SizedBox(height: 3),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(isUp ? Icons.arrow_drop_up_rounded : Icons.arrow_drop_down_rounded, color: isUp ? Colors.green : Colors.redAccent),
-                        Text('${change.toStringAsFixed(2)}%', style: TextStyle(color: isUp ? Colors.green : Colors.redAccent, fontWeight: FontWeight.w600, fontSize: 13)),
-                      ],
-                    ),
-                  ],
+
+                /// 🔹 MIDDLE SECTION (Price + % Change)
+                Expanded(
+                  flex: 2,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _formatPrice(s.price),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: isUp ? Colors.green : Colors.red,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Icon(
+                            isUp
+                                ? Icons.arrow_drop_up_rounded
+                                : Icons.arrow_drop_down_rounded,
+                            color: isUp ? Colors.green : Colors.redAccent,
+                            size: 20,
+                          ),
+                          Text(
+                            '${change.toStringAsFixed(2)}%',
+                            style: TextStyle(
+                              color: isUp ? Colors.green : Colors.redAccent,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                  onPressed: () => _toggleWatchlist(s),
+
+                /// 🔹 RIGHT SECTION (Delete Button)
+                Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: IconButton(
+                    visualDensity: VisualDensity.compact,
+                    splashRadius: 22,
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.redAccent,
+                      size: 24,
+                    ),
+                    onPressed: () => _toggleWatchlist(s),
+                  ),
                 ),
               ],
             ),
           ),
         );
+
       },
     );
   }
+
 
   Widget _animatedNavItem({
     required IconData icon,
