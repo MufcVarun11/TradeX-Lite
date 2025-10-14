@@ -33,14 +33,20 @@ class _TradeXLiteAppState extends State<TradeXLiteApp> {
   Future<void> _initializeApp() async {
     final box = Hive.box('authBox');
     await box.put('isLoggedIn', false);
+
     final savedTheme = box.get('themeMode', defaultValue: 'light');
-    final initialTheme = savedTheme == 'dark' ? ThemeMode.dark : ThemeMode.light;
+    final savedInterval = box.get('refreshInterval');
+    final savedCurrency = box.get('currency', defaultValue: 'INR');
+
     setState(() {
-      _themeMode = initialTheme;
+      _themeMode = savedTheme == 'dark' ? ThemeMode.dark : ThemeMode.light;
+      _refreshInterval = Duration(seconds: savedInterval??5);
+      _currency = savedCurrency;
       _isLoggedIn = false;
       _initialized = true;
     });
   }
+
 
 
   @override

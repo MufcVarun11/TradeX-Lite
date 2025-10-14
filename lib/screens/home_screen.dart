@@ -5,6 +5,7 @@ import 'stock_detail_screen.dart';
 import '../models/stock.dart';
 import '../utils/mock_data.dart';
 import '../widgets/settings_modal.dart';
+import 'package:hive/hive.dart';
 
 class HomeScreen extends StatefulWidget {
   final Function(ThemeMode) themeModeSetter;
@@ -43,6 +44,9 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadInitialStocks();
     _scrollController.addListener(_onScroll);
+
+    _refreshInterval = widget.currentRefreshInterval;
+    _startUpdates();
   }
 
   void _loadInitialStocks() {
@@ -238,18 +242,41 @@ class _HomeScreenState extends State<HomeScreen> {
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
-      builder: (_) => SettingsModal(initialTheme: widget.currentThemeMode, initialInterval: _refreshInterval, initialCurrency: widget.currentCurrency),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => SettingsModal(
+        initialTheme: widget.currentThemeMode,
+        initialInterval: _refreshInterval,
+        initialCurrency: widget.currentCurrency,
+      ),
     );
 
     if (result != null) {
-      if (result.containsKey('theme')) widget.themeModeSetter(result['theme']);
+      final box = Hive.box('authBox');
+
+      if (result.containsKey('theme')) {
+        widget.themeModeSetter(result['theme']);
+        await box.put(
+          'themeMode',
+          result['theme'] == ThemeMode.dark ? 'dark' : 'light',
+        );
+      }
+
       if (result.containsKey('interval')) {
         setState(() => _refreshInterval = result['interval']);
         widget.refreshIntervalSetter(_refreshInterval);
+        await box.put('refreshInterval', _refreshInterval.inSeconds);
         _startUpdates();
       }
-      if (result.containsKey('currency')) widget.currencySetter(result['currency']);
+
+      if (result.containsKey('currency')) {
+        widget.currencySetter(result['currency']);
+        await box.put('currency', result['currency']);
+      }
     }
   }
+
+
+
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 
 class SettingsModal extends StatefulWidget {
   final ThemeMode initialTheme;
@@ -29,11 +28,6 @@ class _SettingsModalState extends State<SettingsModal> {
     _currency = widget.initialCurrency;
   }
 
-  Future<void> _saveThemePreference(ThemeMode mode) async {
-    final box = Hive.box('authBox');
-    await box.put('themeMode', mode == ThemeMode.dark ? 'dark' : 'light');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -50,9 +44,7 @@ class _SettingsModalState extends State<SettingsModal> {
                 value: _theme == ThemeMode.dark,
                 activeColor: Colors.blueAccent,
                 onChanged: (v) {
-                  final newTheme = v ? ThemeMode.dark : ThemeMode.light;
-                  setState(() => _theme = newTheme);
-                  _saveThemePreference(newTheme);
+                  setState(() => _theme = v ? ThemeMode.dark : ThemeMode.light);
                 },
               ),
             ],
