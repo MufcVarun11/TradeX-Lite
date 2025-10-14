@@ -30,17 +30,45 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Stock> _stocks = [];
-  List<Stock> filtered = [];
+  List<Stock> _filtered = [];
   String _query = '';
   Duration _refreshInterval = const Duration(seconds: 5);
   Timer? _timer;
+  final ScrollController _scrollController = ScrollController();
+  bool _isLoadingMore = false;
+  int _page = 0;
 
   @override
   void initState() {
     super.initState();
-    _stocks = generateMockStocks(20);
-    filtered = _stocks;
+    _loadInitialStocks();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _loadInitialStocks() {
+    _stocks = generateMockStocks(30, _page * 30);
+    _filtered = _stocks;
     _startUpdates();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoadingMore) {
+      _loadMoreStocks();
+    }
+  }
+
+  Future<void> _loadMoreStocks() async {
+    setState(() => _isLoadingMore = true);
+    await Future.delayed(const Duration(seconds: 1));
+    _page++;
+    final newStocks = generateMockStocks(30, _page * 30);
+    setState(() {
+      _stocks.addAll(newStocks);
+      _filterList(_query);
+      _isLoadingMore = false;
+    });
   }
 
   void _startUpdates() {
@@ -48,117 +76,154 @@ class _HomeScreenState extends State<HomeScreen> {
     _timer = Timer.periodic(_refreshInterval, (_) {
       setState(() {
         final random = Random();
-
         for (var stock in _stocks) {
-          // Keep prices fluctuating around their previousClose
-          final double direction = random.nextBool() ? 1 : -1; // up or down
-          final double volatility = random.nextDouble() * 25; // more movement
-          // random range
-          final double delta = direction * volatility;
-
-          // Randomly move price a bit around previous close
+          final direction = random.nextBool() ? 1 : -1;
+          final volatility = random.nextDouble() * 15;
+          final delta = direction * volatility;
           stock.price = (stock.previousClose + delta).clamp(1, double.infinity);
         }
-
-        // Re-filter list if user is searching
-        filtered = _stocks
-            .where((s) =>
-        s.symbol.toLowerCase().contains(_query.toLowerCase()) ||
-            s.name.toLowerCase().contains(_query.toLowerCase()))
-            .toList();
+        _filterList(_query);
       });
     });
   }
 
+  void _filterList(String query) {
+    _filtered = _stocks
+        .where((s) =>
+    s.symbol.toLowerCase().contains(query.toLowerCase()) ||
+        s.name.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+  }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? Colors.grey[900] : Colors.grey[50];
+
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Market Watch'),
-        actions: [
-          IconButton(icon: const Icon(Icons.settings), onPressed: _openSettings),
-        ],
+        backgroundColor: Colors.transparent,
+        elevation: 1,
+        title: const Text('Market Watch', style: TextStyle(fontWeight: FontWeight.bold)),
+        actions: [IconButton(icon: const Icon(Icons.settings), onPressed: _openSettings)],
       ),
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8),
-            child: TextField(
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Search stocks',
+            padding: const EdgeInsets.all(10.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark ? Colors.grey[850] : Colors.white,
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 3))],
               ),
-              onChanged: (v) {
-                setState(() {
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search stocks (e.g. RELIANCE, TCS, HDFCBANK)',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _query.isNotEmpty
+                      ? IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      setState(() {
+                        _query = '';
+                        _filtered = _stocks;
+                      });
+                    },
+                  )
+                      : null,
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                ),
+                onChanged: (v) => setState(() {
                   _query = v;
-                  filtered = _stocks
-                      .where((s) =>
-                  s.symbol.toLowerCase().contains(v.toLowerCase()) ||
-                      s.name.toLowerCase().contains(v.toLowerCase()))
-                      .toList();
-                });
-              },
+                  _filterList(v);
+                }),
+              ),
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: filtered.length,
+            child: _filtered.isEmpty
+                ? const Center(
+              child: Text('No stocks found', style: TextStyle(fontSize: 16, color: Colors.grey)),
+            )
+                : ListView.separated(
+              controller: _scrollController,
+              itemCount: _filtered.length + (_isLoadingMore ? 1 : 0),
+              separatorBuilder: (_, __) => Divider(color: isDark ? Colors.grey[800] : Colors.grey[300], height: 1),
               itemBuilder: (context, index) {
-                final s = filtered[index];
+                if (index >= _filtered.length) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: Center(child: CircularProgressIndicator(color: Colors.blueAccent)),
+                  );
+                }
+
+                final s = _filtered[index];
                 final change = s.changePercent;
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Colors.blueGrey.shade50,
-                    child: Text(
-                      s.symbol.substring(0, 2),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  title: Text(
-                    '${s.symbol} — ${s.name}',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  subtitle: Row(
-                    children: [
-                      Text(
-                        'Price: ${_formatPrice(s.price)} ',
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        change >= 0 ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                        color: change >= 0 ? Colors.green : Colors.red,
-                      ),
-                      Text(
-                        '${change.toStringAsFixed(2)}%',
-                        style: TextStyle(
-                          color: change >= 0 ? Colors.green : Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  trailing: const Icon(Icons.chevron_right),
-                  tileColor: change >= 0
-                      ? Colors.green.withOpacity(0.05)
-                      : Colors.red.withOpacity(0.05),
+                final isUp = change >= 0;
+
+                return InkWell(
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => StockDetailScreen(
-                        stock: s,
-                        currency: widget.currentCurrency,
-                      ),
+                      builder: (_) => StockDetailScreen(stock: s, currency: widget.currentCurrency),
+                    ),
+                  ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    color: isUp ? Colors.green.withOpacity(0.04) : Colors.red.withOpacity(0.04),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: isUp ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                          child: Text(s.symbol.substring(0, 2), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(s.symbol, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              const SizedBox(height: 4),
+                              Text(
+                                s.name,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(_formatPrice(s.price), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                            const SizedBox(height: 3),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(isUp ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: isUp ? Colors.green : Colors.red, size: 20),
+                                Text(
+                                  '${change.toStringAsFixed(2)}%',
+                                  style: TextStyle(color: isUp ? Colors.green : Colors.red, fontWeight: FontWeight.w600, fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                 );
-
               },
             ),
           ),
@@ -167,19 +232,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  String _formatPrice(double p) =>
-      widget.currentCurrency == 'USD'
-          ? '\$${p.toStringAsFixed(2)}'
-          : '₹${p.toStringAsFixed(2)}';
+  String _formatPrice(double p) => widget.currentCurrency == 'USD' ? '\$${p.toStringAsFixed(2)}' : '₹${p.toStringAsFixed(2)}';
 
   void _openSettings() async {
     final result = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
-      builder: (_) => SettingsModal(
-        initialTheme: widget.currentThemeMode,
-        initialInterval: _refreshInterval,
-        initialCurrency: widget.currentCurrency,
-      ),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (_) => SettingsModal(initialTheme: widget.currentThemeMode, initialInterval: _refreshInterval, initialCurrency: widget.currentCurrency),
     );
 
     if (result != null) {
