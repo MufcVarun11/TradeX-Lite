@@ -120,6 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [IconButton(icon: const Icon(Icons.settings), onPressed: _openSettings)],
       ),
       body: Column(
+
         children: [
           Padding(
             padding: const EdgeInsets.all(10.0),
