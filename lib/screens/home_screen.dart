@@ -14,6 +14,7 @@ class HomeScreen extends StatefulWidget {
   final Duration currentRefreshInterval;
   final Function(String) currencySetter;
   final String currentCurrency;
+  final VoidCallback onLogout;
 
   const HomeScreen({
     super.key,
@@ -23,6 +24,7 @@ class HomeScreen extends StatefulWidget {
     required this.currentRefreshInterval,
     required this.currencySetter,
     required this.currentCurrency,
+    required this.onLogout,
   });
 
   @override
@@ -230,11 +232,46 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
                 ),
                 onTap: () async {
-                  Navigator.pop(context);
-                  final box = Hive.box('authBox');
-                  await box.put('isLoggedIn', false);
-                  if (!mounted) return;
-                  Navigator.of(context).pushReplacementNamed('/');
+                  final shouldLogout = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Logout'),
+                      content: const Text('Are you sure you want to logout?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text(
+                            'Logout',
+                            style: TextStyle(color: Colors.redAccent),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (shouldLogout != true) return;
+
+                  try {
+                    // Clear all Hive boxes
+                    await Hive.box('authBox').clear();
+                    await Hive.box('watchlistBox').clear();
+
+                    // Trigger logout in parent
+                    widget.onLogout();
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Logout failed: $e'),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                    }
+                  }
                 },
               ),
 

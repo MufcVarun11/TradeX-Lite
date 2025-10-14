@@ -48,6 +48,9 @@ class _TradeXLiteAppState extends State<TradeXLiteApp> {
       _initialized = true;
     });
   }
+  void _handleLogout() {
+    setState(() => _isLoggedIn = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +76,7 @@ class _TradeXLiteAppState extends State<TradeXLiteApp> {
               currentRefreshInterval: _refreshInterval,
               currencySetter: (c) => setState(() => _currency = c),
               currentCurrency: _currency,
+        onLogout: _handleLogout,
             )
           : LoginScreen(
               onLoginSuccess: () {
