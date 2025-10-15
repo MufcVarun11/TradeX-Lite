@@ -240,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
+                          child:  Text('Cancel', style: TextStyle(color: Colors.blueAccent),),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context, true),
