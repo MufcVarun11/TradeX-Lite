@@ -1,4 +1,4 @@
-# tradex
+#  TradeX-Lite
 
 A new Flutter project.
 
