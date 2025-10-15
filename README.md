@@ -63,3 +63,26 @@ flutter run
 4. Build the Apk
    
 flutter build apk
+
+
+
+
+
+
+
+
+
+Screenshots
+
+<img width="1408" height="2974" alt="image" src="https://github.com/user-attachments/assets/cf4b0b4e-5096-4144-8893-724e6dd05483" />
+
+
+<img width="1408" height="2974" alt="image" src="https://github.com/user-attachments/assets/203598be-935c-4992-9bda-0e6caddd32b3" />
+
+<img width="1408" height="2974" alt="image" src="https://github.com/user-attachments/assets/d98561b8-a71d-466b-900b-f7becf43dcbf" />
+
+<img width="1408" height="2974" alt="image" src="https://github.com/user-attachments/assets/ba8f6e34-1ce0-453e-a2f1-53a1d404f92b" />
+
+
+
+
