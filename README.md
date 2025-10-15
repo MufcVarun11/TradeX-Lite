@@ -1,17 +1,45 @@
-#  TradeX-Lite
+📊 TradeX Lite
 
-A new Flutter project.
+TradeX Lite is a Flutter-based stock tracking and analysis application that allows users to view market data, manage watchlists, and customize app preferences.
+It uses local storage (Hive) for data persistence and supports biometric-secured login.
 
-## Getting Started
+🔐 Authentication
 
-This project is a starting point for a Flutter application.
+*Login with username and password.
 
-A few resources to get you started if this is your first Flutter project:
+*Biometric authentication using fingerprint or Face ID.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+*Auto-login if biometrics are enabled.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-# TradeX-Lite
+
+📈 Market Watch
+
+*Displays a list of mock stock data with periodic price updates.
+
+*Lazy loading (infinite scroll) for stock data.
+
+*Search by stock name or symbol.
+
+⭐ Watchlist
+
+*Add or remove stocks with a single tap.
+
+*Reorder watchlist items with drag and drop.
+
+*Watchlist data stored locally using Hive.
+
+⚙️ Settings
+
+*Toggle between light and dark themes.
+
+*Set data refresh intervals (5s / 10s / 30s).
+
+*Choose preferred display currency (INR or USD).
+
+*All preferences are persisted locally.
+
+🔒 Logout and Cache Management
+
+* Secure logout that clears cached Hive data and resets login state.
+  
+* Optionally preserve theme or currency settings if needed.
