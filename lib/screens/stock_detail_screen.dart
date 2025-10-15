@@ -9,11 +9,7 @@ class StockDetailScreen extends StatefulWidget {
   final Stock stock;
   final String currency;
 
-  const StockDetailScreen({
-    super.key,
-    required this.stock,
-    required this.currency,
-  });
+  const StockDetailScreen({super.key, required this.stock, required this.currency});
 
   @override
   State<StockDetailScreen> createState() => _StockDetailScreenState();
@@ -54,8 +50,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     return formatter.format(value);
   }
 
-  String _formatPrice(double p) =>
-      widget.currency == 'USD' ? '\$${p.toStringAsFixed(2)}' : '₹${p.toStringAsFixed(2)}';
+  String _formatPrice(double p) => widget.currency == 'USD' ? '\$${p.toStringAsFixed(2)}' : '₹${p.toStringAsFixed(2)}';
 
   @override
   Widget build(BuildContext context) {
@@ -65,10 +60,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          _stock.symbol,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: Text(_stock.symbol, style: const TextStyle(fontWeight: FontWeight.bold)),
         elevation: 1,
       ),
       body: Container(
@@ -79,14 +71,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ---- Stock Name and Price ----
-              Text(
-                _stock.name,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
-                ),
-              ),
+              Text(_stock.name, style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 22)),
               const SizedBox(height: 12),
 
               Row(
@@ -94,66 +79,37 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                 children: [
                   AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
-                    transitionBuilder: (child, anim) =>
-                        FadeTransition(opacity: anim, child: child),
+                    transitionBuilder: (child, anim) => FadeTransition(opacity: anim, child: child),
                     child: Text(
                       _formatPrice(_stock.price),
                       key: ValueKey(_stock.price),
-                      style: TextStyle(
-                        fontSize: 30,
-                        color: isUp ? Colors.green : Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: TextStyle(fontSize: 30, color: isUp ? Colors.green : Colors.red, fontWeight: FontWeight.bold),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Icon(
-                    isUp ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                    color: isUp ? Colors.green : Colors.red,
-                    size: 32,
-                  ),
+                  Icon(isUp ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: isUp ? Colors.green : Colors.red, size: 32),
                   Text(
                     '${change.toStringAsFixed(2)}%',
-                    style: TextStyle(
-                      color: isUp ? Colors.green : Colors.red,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(color: isUp ? Colors.green : Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
-                'Last updated: ${DateFormat('hh:mm:ss a').format(DateTime.now())}',
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-              ),
+              Text('Last updated: ${DateFormat('hh:mm:ss a').format(DateTime.now())}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
 
               const SizedBox(height: 24),
 
-              // ---- Chart Section ----
               Container(
                 decoration: BoxDecoration(
                   color: theme.cardColor,
                   borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 6, offset: const Offset(0, 3))],
                 ),
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Price Trends',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
+                    const Text('Price Trends', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                     const SizedBox(height: 12),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
@@ -164,10 +120,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                           physics: const BouncingScrollPhysics(),
                           child: SizedBox(
                             width: max(MediaQuery.of(context).size.width, 600),
-                            child: LineChart(
-                              points: _stock.intraday,
-                              lineColor: isUp ? Colors.green : Colors.red,
-                            ),
+                            child: LineChart(points: _stock.intraday, lineColor: isUp ? Colors.green : Colors.red),
                           ),
                         ),
                       ),
@@ -178,26 +131,12 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
 
               const SizedBox(height: 24),
 
-
               Container(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [theme.cardColor, theme.cardColor.withOpacity(0.9)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  gradient: LinearGradient(colors: [theme.cardColor, theme.cardColor.withOpacity(0.9)], begin: Alignment.topLeft, end: Alignment.bottomRight),
                   borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                  border: Border.all(
-                    color: Colors.grey.withOpacity(0.2),
-                    width: 0.8,
-                  ),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4))],
+                  border: Border.all(color: Colors.grey.withOpacity(0.2), width: 0.8),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                 child: Column(
@@ -207,17 +146,10 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                       children: const [
                         Icon(Icons.bar_chart_rounded, size: 22, color: Colors.blueAccent),
                         SizedBox(width: 8),
-                        Text(
-                          'Market Information',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 18,
-                          ),
-                        ),
+                        Text('Market Information', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 18)),
                       ],
                     ),
                     const SizedBox(height: 18),
-
 
                     GridView.count(
                       crossAxisCount: 2,
@@ -227,24 +159,9 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                       childAspectRatio: 2.5,
                       physics: const NeverScrollableScrollPhysics(),
                       children: [
-                        _infoTileWithIcon(
-                          icon: Icons.trending_up_rounded,
-                          title: 'Open',
-                          value: _stock.intraday.first.toStringAsFixed(2),
-                          color: Colors.teal,
-                        ),
-                        _infoTileWithIcon(
-                          icon: Icons.arrow_circle_up_rounded,
-                          title: 'High',
-                          value: _stock.high.toStringAsFixed(2),
-                          color: Colors.green,
-                        ),
-                        _infoTileWithIcon(
-                          icon: Icons.arrow_circle_down_rounded,
-                          title: 'Low',
-                          value: _stock.low.toStringAsFixed(2),
-                          color: Colors.redAccent,
-                        ),
+                        _infoTileWithIcon(icon: Icons.trending_up_rounded, title: 'Open', value: _stock.intraday.first.toStringAsFixed(2), color: Colors.teal),
+                        _infoTileWithIcon(icon: Icons.arrow_circle_up_rounded, title: 'High', value: _stock.high.toStringAsFixed(2), color: Colors.green),
+                        _infoTileWithIcon(icon: Icons.arrow_circle_down_rounded, title: 'Low', value: _stock.low.toStringAsFixed(2), color: Colors.redAccent),
                         _infoTileWithIcon(
                           icon: Icons.refresh_rounded,
                           title: 'Prev Close',
@@ -267,8 +184,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
                     ),
                   ],
                 ),
-              )
-
+              ),
             ],
           ),
         ),
@@ -276,36 +192,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
     );
   }
 
-  Widget _infoTile(String title, String value) {
-    return SizedBox(
-      width: 130,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              )),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _infoTileWithIcon({
-    required IconData icon,
-    required String title,
-    required String value,
-    required Color color,
-  }) {
+  Widget _infoTileWithIcon({required IconData icon, required String title, required String value, required Color color}) {
     return Container(
       decoration: BoxDecoration(
         color: color.withOpacity(0.07),
@@ -317,10 +204,7 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
         children: [
           Container(
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color.withOpacity(0.15), shape: BoxShape.circle),
             child: Icon(icon, size: 16, color: color),
           ),
           const SizedBox(width: 10),
@@ -328,21 +212,9 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
+                Text(title, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                 const SizedBox(height: 3),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
+                Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
               ],
             ),
           ),
@@ -350,5 +222,4 @@ class _StockDetailScreenState extends State<StockDetailScreen> {
       ),
     );
   }
-
 }

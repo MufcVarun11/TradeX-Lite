@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() => _isLoadingMore = true);
 
-    await Future.delayed(const Duration(seconds: 1)); // simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
 
     setState(() {
       final nextBatch = _stocks.skip(_loadedCount).take(20).toList();
@@ -115,11 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _filterList(String query) {
     setState(() {
-      _filtered = _stocks
-          .where((s) =>
-      s.symbol.toLowerCase().contains(query.toLowerCase()) ||
-          s.name.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      _filtered = _stocks.where((s) => s.symbol.toLowerCase().contains(query.toLowerCase()) || s.name.toLowerCase().contains(query.toLowerCase())).toList();
     });
   }
 
@@ -134,10 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = isDark ? const Color(0xFF121212) : Colors.grey[50];
 
-    final screens = [
-      _buildMarketScreen(),
-      _buildWatchlistScreen(),
-    ];
+    final screens = [_buildMarketScreen(), _buildWatchlistScreen()];
 
     final appBars = [
       AppBar(
@@ -162,15 +155,12 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🔹 Drawer Header
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: isDark
-                        ? [Colors.blueAccent.shade700, Colors.blueGrey.shade800]
-                        : [Colors.blueAccent, Colors.lightBlueAccent.shade100],
+                    colors: isDark ? [Colors.blueAccent.shade700, Colors.blueGrey.shade800] : [Colors.blueAccent, Colors.lightBlueAccent.shade100],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -186,51 +176,30 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(height: 12),
                     Text(
                       'Welcome, Trader!',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     SizedBox(height: 4),
-                    Text(
-                      'Manage your app preferences',
-                      style: TextStyle(fontSize: 13, color: Colors.white70),
-                    ),
+                    Text('Manage your app preferences', style: TextStyle(fontSize: 13, color: Colors.white70)),
                   ],
                 ),
               ),
 
               const SizedBox(height: 10),
 
-              // 🔹 Settings Option
               ListTile(
                 leading: const Icon(Icons.settings_outlined, color: Colors.blueAccent),
-                title: const Text(
-                  'Settings',
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
-                ),
+                title: const Text('Settings', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
                 onTap: () {
                   Navigator.pop(context);
                   _openSettings();
                 },
               ),
 
-              // 🔹 Divider
-              Divider(
-                thickness: 1,
-                indent: 16,
-                endIndent: 16,
-                color: isDark ? Colors.grey[800] : Colors.grey[300],
-              ),
+              Divider(thickness: 1, indent: 16, endIndent: 16, color: isDark ? Colors.grey[800] : Colors.grey[300]),
 
-              // 🔹 Logout Option
               ListTile(
                 leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-                title: const Text(
-                  'Logout',
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
-                ),
+                title: const Text('Logout', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
                 onTap: () async {
                   final shouldLogout = await showDialog<bool>(
                     context: context,
@@ -240,14 +209,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
-                          child: const Text('Cancel'),
+                          child: Text('Cancel', style: TextStyle(color: Colors.blueAccent)),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context, true),
-                          child: const Text(
-                            'Logout',
-                            style: TextStyle(color: Colors.redAccent),
-                          ),
+                          child: const Text('Logout', style: TextStyle(color: Colors.redAccent)),
                         ),
                       ],
                     ),
@@ -256,20 +222,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (shouldLogout != true) return;
 
                   try {
-                    // Clear all Hive boxes
                     await Hive.box('authBox').clear();
                     await Hive.box('watchlistBox').clear();
 
-                    // Trigger logout in parent
                     widget.onLogout();
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Logout failed: $e'),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Logout failed: $e'), backgroundColor: Colors.redAccent));
                     }
                   }
                 },
@@ -277,16 +236,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const Spacer(),
 
-              // 🔹 App Version / Footer
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text(
-                  'TradeX Lite v1.0.0',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white54 : Colors.grey.shade600,
-                  ),
-                ),
+                child: Text('TradeX Lite v1.0.0', style: TextStyle(fontSize: 12, color: isDark ? Colors.white54 : Colors.grey.shade600)),
               ),
             ],
           ),
@@ -300,13 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
           color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? Colors.black.withOpacity(0.4)
-                  : Colors.blueAccent.withOpacity(0.15),
-              blurRadius: 25,
-              offset: const Offset(0, 10),
-            ),
+            BoxShadow(color: isDark ? Colors.black.withOpacity(0.4) : Colors.blueAccent.withOpacity(0.15), blurRadius: 25, offset: const Offset(0, 10)),
           ],
         ),
         child: Padding(
@@ -321,18 +267,13 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-
   }
 
   Widget _buildMarketScreen() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final ScrollController _scrollController = ScrollController();
-    final int batchSize = 20; // how many new stocks to load per scroll
-
-    // Add scroll listener for lazy loading
     _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 200) {
+      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
         _loadMoreStocks();
       }
     });
@@ -345,13 +286,7 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: BoxDecoration(
               color: isDark ? Colors.grey[850] : Colors.white,
               borderRadius: BorderRadius.circular(30),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
+              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 3))],
             ),
             child: TextField(
               onChanged: _filterList,
@@ -359,8 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 hintText: 'Search stocks (e.g. RELIANCE, TCS, HDFCBANK)',
                 prefixIcon: const Icon(Icons.search),
                 border: InputBorder.none,
-                contentPadding:
-                const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               ),
             ),
           ),
@@ -375,146 +309,96 @@ class _HomeScreenState extends State<HomeScreen> {
             },
             child: _filtered.isEmpty
                 ? const Center(
-              child: Text(
-                'No stocks found',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            )
+                    child: Text('No stocks found', style: TextStyle(fontSize: 16, color: Colors.grey)),
+                  )
                 : ListView.separated(
-              controller: _scrollController,
-              itemCount: _filtered.length + 1,
-              separatorBuilder: (_, __) => Divider(
-                color: isDark ? Colors.grey[800] : Colors.grey[300],
-                height: 1,
-              ),
-              itemBuilder: (context, index) {
-                // Lazy loading loader indicator
-                if (index == _filtered.length) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    child: Center(
-                      child: _isLoadingMore
-                          ? const CircularProgressIndicator(
-                          color: Colors.blueAccent)
-                          : const SizedBox.shrink(),
-                    ),
-                  );
-                }
+                    controller: _scrollController,
+                    itemCount: _filtered.length + 1,
+                    separatorBuilder: (_, __) => Divider(color: isDark ? Colors.grey[800] : Colors.grey[300], height: 1),
+                    itemBuilder: (context, index) {
+                      if (index == _filtered.length) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          child: Center(child: _isLoadingMore ? const CircularProgressIndicator(color: Colors.blueAccent) : const SizedBox.shrink()),
+                        );
+                      }
 
-                final s = _filtered[index];
-                final change = s.changePercent;
-                final isUp = change >= 0;
+                      final s = _filtered[index];
+                      final change = s.changePercent;
+                      final isUp = change >= 0;
 
-                return InkWell(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => StockDetailScreen(
-                        stock: s,
-                        currency: widget.currentCurrency,
-                      ),
-                    ),
-                  ),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                    color: isUp
-                        ? Colors.green.withOpacity(0.04)
-                        : Colors.red.withOpacity(0.04),
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 16),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: isUp
-                              ? Colors.green.withOpacity(0.1)
-                              : Colors.red.withOpacity(0.1),
-                          child: Text(
-                            s.symbol.substring(0, 2),
-                            style: const TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 14),
+                      return InkWell(
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => StockDetailScreen(stock: s, currency: widget.currentCurrency),
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                          color: isUp ? Colors.green.withOpacity(0.04) : Colors.red.withOpacity(0.04),
+                          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                          child: Row(
                             children: [
-                              Text(
-                                s.symbol,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16),
+                              CircleAvatar(
+                                backgroundColor: isUp ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                                child: Text(s.symbol.substring(0, 2), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                s.name,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                    color: Colors.grey.shade600,
-                                    fontSize: 13),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(s.symbol, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      s.name,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(_formatPrice(s.price), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                                  const SizedBox(height: 3),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(isUp ? Icons.arrow_drop_up : Icons.arrow_drop_down, color: isUp ? Colors.green : Colors.red, size: 20),
+                                      Text(
+                                        '${change.toStringAsFixed(2)}%',
+                                        style: TextStyle(color: isUp ? Colors.green : Colors.red, fontWeight: FontWeight.w600, fontSize: 13),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 250),
+                                transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
+                                child: IconButton(
+                                  key: ValueKey(s.isInWatchlist),
+                                  icon: Icon(
+                                    s.isInWatchlist ? Icons.bookmark : Icons.bookmark_border,
+                                    color: s.isInWatchlist ? Colors.blueAccent : Colors.grey,
+                                  ),
+                                  onPressed: () => _toggleWatchlist(s),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              _formatPrice(s.price),
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16),
-                            ),
-                            const SizedBox(height: 3),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  isUp
-                                      ? Icons.arrow_drop_up
-                                      : Icons.arrow_drop_down,
-                                  color: isUp ? Colors.green : Colors.red,
-                                  size: 20,
-                                ),
-                                Text(
-                                  '${change.toStringAsFixed(2)}%',
-                                  style: TextStyle(
-                                      color: isUp
-                                          ? Colors.green
-                                          : Colors.red,
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 13),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 250),
-                          transitionBuilder: (child, anim) =>
-                              ScaleTransition(scale: anim, child: child),
-                          child: IconButton(
-                            key: ValueKey(s.isInWatchlist),
-                            icon: Icon(
-                              s.isInWatchlist ? Icons.bookmark : Icons.bookmark_border,
-                              color: s.isInWatchlist ? Colors.blueAccent : Colors.grey,
-                            ),
-                            onPressed: () => _toggleWatchlist(s),
-                          ),
-                        ),
-
-                      ],
-                    ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
           ),
         ),
       ],
     );
   }
-
 
   Widget _buildWatchlistScreen() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -523,11 +407,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return const Center(
         child: Text(
           'No stocks added to watchlist yet.',
-          style: TextStyle(
-            fontSize: 16,
-            color: Colors.grey,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500),
         ),
       );
     }
@@ -559,36 +439,21 @@ class _HomeScreenState extends State<HomeScreen> {
             color: isDark ? Colors.grey[850]?.withOpacity(0.9) : Colors.white,
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
-              BoxShadow(
-                color: isDark
-                    ? Colors.black.withOpacity(0.3)
-                    : Colors.blueAccent.withOpacity(0.08),
-                blurRadius: 12,
-                offset: const Offset(0, 6),
-              ),
+              BoxShadow(color: isDark ? Colors.black.withOpacity(0.3) : Colors.blueAccent.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 6)),
             ],
-            border: Border.all(
-              color: isUp
-                  ? Colors.green.withOpacity(0.25)
-                  : Colors.red.withOpacity(0.25),
-              width: 1,
-            ),
+            border: Border.all(color: isUp ? Colors.green.withOpacity(0.25) : Colors.red.withOpacity(0.25), width: 1),
           ),
           child: InkWell(
             borderRadius: BorderRadius.circular(18),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => StockDetailScreen(
-                  stock: s,
-                  currency: widget.currentCurrency,
-                ),
+                builder: (_) => StockDetailScreen(stock: s, currency: widget.currentCurrency),
               ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                /// 🔹 LEFT SECTION (Logo + Stock Name)
                 Expanded(
                   flex: 3,
                   child: Row(
@@ -596,15 +461,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       CircleAvatar(
                         radius: 22,
-                        backgroundColor: isUp
-                            ? Colors.green.withOpacity(0.12)
-                            : Colors.red.withOpacity(0.12),
+                        backgroundColor: isUp ? Colors.green.withOpacity(0.12) : Colors.red.withOpacity(0.12),
                         child: Text(
                           s.symbol.substring(0, 2),
-                          style: TextStyle(
-                            color: isUp ? Colors.green : Colors.redAccent,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: TextStyle(color: isUp ? Colors.green : Colors.redAccent, fontWeight: FontWeight.bold),
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -617,20 +477,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               s.symbol,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               s.name,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade600,
-                              ),
+                              style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                             ),
                           ],
                         ),
@@ -639,7 +493,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                /// 🔹 MIDDLE SECTION (Price + % Change)
                 Expanded(
                   flex: 2,
                   child: Column(
@@ -648,31 +501,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         _formatPrice(s.price),
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                          color: isUp ? Colors.green : Colors.red,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: isUp ? Colors.green : Colors.red),
                       ),
                       const SizedBox(height: 2),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Icon(
-                            isUp
-                                ? Icons.arrow_drop_up_rounded
-                                : Icons.arrow_drop_down_rounded,
-                            color: isUp ? Colors.green : Colors.redAccent,
-                            size: 20,
-                          ),
+                          Icon(isUp ? Icons.arrow_drop_up_rounded : Icons.arrow_drop_down_rounded, color: isUp ? Colors.green : Colors.redAccent, size: 20),
                           Text(
                             '${change.toStringAsFixed(2)}%',
-                            style: TextStyle(
-                              color: isUp ? Colors.green : Colors.redAccent,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                            ),
+                            style: TextStyle(color: isUp ? Colors.green : Colors.redAccent, fontWeight: FontWeight.w600, fontSize: 13),
                           ),
                         ],
                       ),
@@ -680,17 +519,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                /// 🔹 RIGHT SECTION (Delete Button)
                 Padding(
                   padding: const EdgeInsets.only(left: 10),
                   child: IconButton(
                     visualDensity: VisualDensity.compact,
                     splashRadius: 22,
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      color: Colors.redAccent,
-                      size: 24,
-                    ),
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 24),
                     onPressed: () => _toggleWatchlist(s),
                   ),
                 ),
@@ -698,22 +532,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         );
-
       },
     );
   }
 
-
-  Widget _animatedNavItem({
-    required IconData icon,
-    required String label,
-    required int index,
-  }) {
+  Widget _animatedNavItem({required IconData icon, required String label, required int index}) {
     final bool isActive = _currentIndex == index;
     final activeColor = Colors.blueAccent;
-    final inactiveColor = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white70
-        : Colors.grey.shade600;
+    final inactiveColor = Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.grey.shade600;
 
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = index),
@@ -721,10 +547,7 @@ class _HomeScreenState extends State<HomeScreen> {
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? activeColor.withOpacity(0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
-        ),
+        decoration: BoxDecoration(color: isActive ? activeColor.withOpacity(0.15) : Colors.transparent, borderRadius: BorderRadius.circular(20)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
