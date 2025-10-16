@@ -2,7 +2,7 @@
 
 # 📊 TradeX Lite
 
-**A Flutter-based stock tracking and analysis app**  
+**A Flutter-based mock stock tracking and analysis app**  
 Built to help users monitor market data, manage watchlists, and personalize app settings effortlessly.
 
 </div>
