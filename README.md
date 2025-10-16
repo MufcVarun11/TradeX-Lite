@@ -67,7 +67,8 @@ Built to help users monitor market data, manage watchlists, and personalize app 
     <td><img src="https://github.com/user-attachments/assets/cf4b0b4e-5096-4144-8893-724e6dd05483" width="250"/></td>
     <td><img src="https://github.com/user-attachments/assets/203598be-935c-4992-9bda-0e6caddd32b3" width="250"/></td>
     <td><img src="https://github.com/user-attachments/assets/d98561b8-a71d-466b-900b-f7becf43dcbf" width="250"/></td>
-    <td><img src="https://github.com/user-attachments/assets/ba8f6e34-1ce0-453e-a2f1-53a1d404f92b" width="250"/></td>
+    <td><img src="https://github.com/MufcVarun11/TradeX-Lite/blob/f24e27a61a972e8e0f5e696b6d7aabba3f6adbbe/Screenshot_20251016_150927.png" width="250"/></td>
+   <td><img src="https://github.com/user-attachments/assets/ba8f6e34-1ce0-453e-a2f1-53a1d404f92b" width="250"/></td>
   </tr>
 </table>
 
