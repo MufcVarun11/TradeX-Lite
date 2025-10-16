@@ -197,44 +197,60 @@ class _HomeScreenState extends State<HomeScreen> {
 
               Divider(thickness: 1, indent: 16, endIndent: 16, color: isDark ? Colors.grey[800] : Colors.grey[300]),
 
-              ListTile(
-                leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-                title: const Text('Logout', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15)),
-                onTap: () async {
-                  final shouldLogout = await showDialog<bool>(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Logout'),
-                      content: const Text('Are you sure you want to logout?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text('Cancel', style: TextStyle(color: Colors.blueAccent)),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('Logout', style: TextStyle(color: Colors.redAccent)),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (shouldLogout != true) return;
-
-                  try {
-                    await Hive.box('authBox').clear();
-                    await Hive.box('watchlistBox').clear();
-
-                    widget.onLogout();
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Logout failed: $e'), backgroundColor: Colors.redAccent));
-                    }
-                  }
-                },
+            ListTile(
+              leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+              title: const Text(
+                'Logout',
+                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
               ),
+              onTap: () async {
+                final shouldLogout = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Logout'),
+                    content: const Text('Are you sure you want to logout?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: const Text('Cancel', style: TextStyle(color: Colors.blueAccent)),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        child: const Text('Logout', style: TextStyle(color: Colors.redAccent)),
+                      ),
+                    ],
+                  ),
+                );
 
-              const Spacer(),
+                if (shouldLogout != true) return;
+
+                try {
+                  final authBox = Hive.box('authBox');
+                  final watchlistBox = Hive.box('watchlistBox');
+
+                  await authBox.clear();
+                  await watchlistBox.clear();
+
+
+                  await authBox.put('themeMode', 'light');
+
+
+                  widget.onLogout();
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Logout failed: $e'),
+                        backgroundColor: Colors.redAccent,
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+
+
+            const Spacer(),
 
               Padding(
                 padding: const EdgeInsets.all(16.0),
